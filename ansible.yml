@@ -1,0 +1,26 @@
+---
+- hosts: server1
+  gather_facts: false
+  tasks:
+  - name: Get details of all images
+    docker_host_info:
+      images: yes
+      verbose_output: yes
+    register: image_info
+  - name: Remove all images
+    docker_image:
+      name: "{{ item }}"
+      state: absent
+    loop: "{{ image_info.images | map(attribute='Id') | list }}"
+  - name: Containerize Application
+    command: docker build -t 1234567rishabh/reddit-clone /home/ubuntu/Reddit-Clone-Using-Kubernetes-Ingress/.
+  - name: Push into docker hub
+    command: docker push 1234567rishabh/reddit-clone:latest
+
+- hosts: server2
+  gather_facts: false
+    #sudo: yes
+  tasks:
+  - name: Kubernetes Deployment To create Pods
+    command: kubectl port-forward svc/reddit-clone-service 3000:3000 --address 0.0.0.0
+      #sh /home/ubuntu/k8s/Kubernetes-Deployment.sh
